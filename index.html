@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <section class="todoapp">
+      <header class="header">
+        <h1>todos</h1>
+        <input
+          id="newTodoInput"
+          class="new-todo"
+          placeholder="What needs to be done?"
+          autofocus
+        />
+      </header>
+
+      <section class="main">
+        <input class="toggle-all" type="checkbox" onclick="toggleTodoListVisiblity()" />
+        <ul id="todoList" class="todo-list"></ul>
+      </section>
+
+      <footer class="footer">
+        <span class="todo-count"><strong>0</strong> items left</span>
+        <div class="selectContainer">
+          <button class="allButton" onclick="showAll()">All</button>
+          <button class="activeButton" onclick="showActive()">Active</button>
+          <button class="completedButton" onclick="showCompleted()">Completed</button>
+        </div>
+        <button class="clear-completed" onclick="clearComplectedTodoListItems()">Clear completed</button>
+      </footer>
+    </section>
+
+    <script src="index.js"></script>
+  </body>
+</html>
