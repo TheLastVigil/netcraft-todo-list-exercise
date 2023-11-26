@@ -13,6 +13,7 @@ const clearCompleted = document.querySelector(".clear-completed");
 let id = 0;
 let itemCount = 0;
 let complectedCount = 0;
+let itemsLS = [];
 /*
  *  TodoList logic
  */
@@ -22,15 +23,26 @@ function start() {
     toggleAll.style.display = "none";
     clearCompleted.style.display = "none";
   }
+  loadFromLocalStorage();
 }
 
 function addNewTodoFromInput(keydownEvent) {
   if (keydownEvent.key === "Enter" && newTodoInput.value) {
+    if (checkIfItemNameExists(newTodoInput.value)) {
+      alert("Item allready exists!");
+      return;
+    }
     footer.style.display = "flex";
     toggleAll.style.display = "block";
     todoCount.innerHTML = ++itemCount;
     createNewListItemFromValue(newTodoInput.value);
     updateClearCompletedVisiblity();
+    itemsLS.push({
+      name: newTodoInput.value,
+      checked: false,
+      color: "#ffffff",
+    });
+    saveToLocalStorage();
     newTodoInput.value = "";
     addShadowToFooter();
   }
@@ -51,6 +63,7 @@ function createNewListItemFromValue(todoValue) {
 `;
   id++;
   todoList.appendChild(item);
+  return item;
 }
 
 function toggleToDoListItemEdit(id) {
@@ -69,8 +82,18 @@ function editTodoListItemLabel(evt, id) {
   const todoListItemView = todoListItem.querySelector(".view");
   const todoListItemEdit = todoListItem.querySelector(".edit");
   const todoListItemLabel = todoListItem.querySelector("label");
+  if (checkIfItemNameExists(todoListItemEdit.value)) {
+    alert("Item allready exists!");
+    return;
+  }
   todoListItemView.style.display = "block";
   todoListItemEdit.style.display = "none";
+  itemsLS.forEach((item) => {
+    if (item.name === todoListItemLabel.innerHTML) {
+      item.name = todoListItemEdit.value;
+    }
+  });
+  saveToLocalStorage();
   todoListItemLabel.innerHTML = todoListItemEdit.value;
 }
 
@@ -93,20 +116,34 @@ function invertHex(hex) {
 
 function updateTodoListItemBackgroundColor(evt, id) {
   const todoListItem = document.getElementById(id);
+  const todoListItemLabel = todoListItem.querySelector('label');
   const parsedColor = evt.target.value.substring(1, evt.target.value.length);
   const invertedColor = invertHex(parsedColor);
   todoListItem.style.color = invertedColor;
   todoListItem.style.backgroundColor = evt.target.value;
+  itemsLS.forEach((item) => {
+    if (item.name === todoListItemLabel.innerHTML) {
+      item.color = evt.target.value;
+    }
+  });
+  saveToLocalStorage();
 }
 
 function deleteTodoListItem(id) {
   const todoListItem = document.getElementById(id);
+  const todoListItemLabel = todoListItem.querySelector("label");
   const todoListItemCheckbox = todoListItem.querySelector("input");
   if (todoListItemCheckbox.checked) {
     complectedCount--;
   } else {
     todoCount.innerHTML = --itemCount;
   }
+  itemsLS.forEach((item, index) => {
+    if (item.name === todoListItemLabel.innerHTML) {
+      itemsLS.splice(index, 1);
+    }
+  });
+  saveToLocalStorage();
   todoListItem.remove();
   updateClearCompletedVisiblity();
   addShadowToFooter();
@@ -124,6 +161,13 @@ function clearComplectedTodoListItems() {
   }
   for (let i = 0; i < temp.length; i++) {
     const element = temp[i];
+    const todoListItemLabel = element.querySelector("label");
+    itemsLS.forEach((item, index) => {
+      if (item.name === todoListItemLabel.innerHTML) {
+        itemsLS.splice(index, 1);
+      }
+    });
+    saveToLocalStorage();
     element.remove();
   }
   updateClearCompletedVisiblity();
@@ -131,9 +175,9 @@ function clearComplectedTodoListItems() {
 }
 
 function checkTodoListItem(id) {
-  const todoListItemCheckbox = document
-    .getElementById(id)
-    .querySelector("input");
+  const todoListItem = document.getElementById(id);
+  const todoListItemCheckbox = todoListItem.querySelector("input");
+  const todoListItemLabel = todoListItem.querySelector("label");
   if (todoListItemCheckbox.checked) {
     todoCount.innerHTML = --itemCount;
     complectedCount++;
@@ -141,6 +185,12 @@ function checkTodoListItem(id) {
     todoCount.innerHTML = ++itemCount;
     complectedCount--;
   }
+  itemsLS.forEach((item) => {
+    if (item.name === todoListItemLabel.innerHTML) {
+      item.checked = todoListItemCheckbox.checked
+    }
+  });
+  saveToLocalStorage();
   updateClearCompletedVisiblity();
 }
 
@@ -160,6 +210,17 @@ function toggleTodoListVisiblity() {
   }
 }
 
+function checkIfItemNameExists(name) {
+  for (let i = 0; i < todoList.children.length; i++) {
+    const todoListItem = todoList.children[i];
+    const todoListItemLabel = todoListItem.querySelector("label");
+    if (todoListItemLabel.innerHTML === name) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function updateCounters() {
   itemCount = 0;
   complectedCount = 0;
@@ -174,7 +235,6 @@ function updateCounters() {
 }
 
 function showAll() {
-  console.log('skirt');
   for (let i = 0; i < todoList.children.length; i++) {
     const todoListItem = todoList.children[i];
     todoListItem.style.display = "block";
@@ -185,7 +245,6 @@ function showAll() {
 }
 
 function showActive() {
-  console.log('skirt');
   for (let i = 0; i < todoList.children.length; i++) {
     const todoListItem = todoList.children[i];
     const todoListItemCheckbox = todoListItem.querySelector("input");
@@ -201,7 +260,6 @@ function showActive() {
 }
 
 function showCompleted() {
-  console.log('skirt');
   for (let i = 0; i < todoList.children.length; i++) {
     const todoListItem = todoList.children[i];
     const todoListItemCheckbox = todoListItem.querySelector("input");
@@ -214,6 +272,34 @@ function showCompleted() {
   updateCounters();
   updateClearCompletedVisiblity();
   addShadowToFooter();
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem('todoListItems', JSON.stringify(itemsLS));
+}
+
+function loadFromLocalStorage() {
+  const localStorageItemsData = localStorage.getItem('todoListItems');
+  if (localStorageItemsData) {
+    const localStorageItemsDataParsed = JSON.parse(localStorageItemsData);
+    itemsLS = localStorageItemsDataParsed;
+    footer.style.display = "flex";
+    toggleAll.style.display = "block";
+    for (let i = 0; i < itemsLS.length; i++) {
+      const itemLS = itemsLS[i];
+      const todoListItemAdded = createNewListItemFromValue(itemLS.name);
+      // update color and checked
+      todoListItemAdded.querySelector('input').checked = itemLS.checked;
+      const color = itemLS.color;
+      const invertedColor = invertHex(color);
+      todoListItemAdded.style.color = invertedColor;
+      todoListItemAdded.style.backgroundColor = color;
+      // ---------------
+      todoCount.innerHTML = ++itemCount;
+      addShadowToFooter();
+    }
+    updateClearCompletedVisiblity();
+  }
 }
 
 /*
