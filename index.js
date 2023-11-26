@@ -32,6 +32,7 @@ function addNewTodoFromInput(keydownEvent) {
     createNewListItemFromValue(newTodoInput.value);
     updateClearCompletedVisiblity();
     newTodoInput.value = "";
+    addShadowToFooter();
   }
 }
 
@@ -39,17 +40,41 @@ function createNewListItemFromValue(todoValue) {
   const item = document.createElement("li");
   item.id = id;
   item.innerHTML = `
-     <div class="view">
+     <div class="view" ondblclick="toggleToDoListItemEdit(${id})">
          <input class="toggle"
                 type="checkbox" onclick="checkTodoListItem(${id})"/>
          <label>${todoValue}</label>
-         <input class="colorEdit" type="color" value="#ffffff" oninput="updateColor(event, ${id})"/>
+         <input class="colorEdit" type="color" value="#ffffff" oninput="updateTodoListItemBackgroundColor(event, ${id})"/>
          <button class="destroy" onclick="deleteTodoListItem(${id})"/>
      </div>
-     <input class="edit"/>
+     <input class="edit" onkeydown="editTodoListItemLabel(event, ${id})"/>
 `;
   id++;
   todoList.appendChild(item);
+}
+
+function toggleToDoListItemEdit(id) {
+  const todoListItem = document.getElementById(id);
+  const todoListItemView = todoListItem.querySelector(".view");
+  const todoListItemEdit = todoListItem.querySelector(".edit");
+  const todoListItemLabel = todoListItem.querySelector("label");
+  todoListItemView.style.display = "none";
+  todoListItemEdit.style.display = "block";
+  todoListItemEdit.value = todoListItemLabel.innerHTML;
+}
+
+function editTodoListItemLabel(evt, id) {
+  if (evt.key !== "Enter") return;
+  const todoListItem = document.getElementById(id);
+  const todoListItemView = todoListItem.querySelector(".view");
+  const todoListItemEdit = todoListItem.querySelector(".edit");
+  const todoListItemLabel = todoListItem.querySelector("label");
+  todoListItemView.style.display = "block";
+  todoListItemEdit.style.display = "none";
+  todoListItemLabel.innerHTML = todoListItemEdit.value;
+}
+
+function addShadowToFooter() {
   let shadow = "0 1px 1px rgba(0, 0, 0, 0.2),";
   for (let i = 1; i <= itemCount; i++) {
     shadow += "0 " + 8 * i + "px 0 " + -3 * i + "px #f6f6f6,";
@@ -61,14 +86,12 @@ function createNewListItemFromValue(todoValue) {
 }
 
 function invertHex(hex) {
-  let newColor = (Number(`0x1${hex}`) ^ 0xffffff)
-    .toString(16)
-    .substring(1);
+  let newColor = (Number(`0x1${hex}`) ^ 0xffffff).toString(16).substring(1);
   newColor = "#" + newColor;
   return newColor;
 }
 
-function updateColor(evt, id) {
+function updateTodoListItemBackgroundColor(evt, id) {
   const todoListItem = document.getElementById(id);
   const parsedColor = evt.target.value.substring(1, evt.target.value.length);
   const invertedColor = invertHex(parsedColor);
@@ -86,6 +109,7 @@ function deleteTodoListItem(id) {
   }
   todoListItem.remove();
   updateClearCompletedVisiblity();
+  addShadowToFooter();
 }
 
 function clearComplectedTodoListItems() {
@@ -103,6 +127,7 @@ function clearComplectedTodoListItems() {
     element.remove();
   }
   updateClearCompletedVisiblity();
+  addShadowToFooter();
 }
 
 function checkTodoListItem(id) {
@@ -141,25 +166,26 @@ function updateCounters() {
   for (let i = 0; i < todoList.children.length; i++) {
     const todoListItem = todoList.children[i];
     const todoListItemCheckbox = todoListItem.querySelector("input");
-    todoListItem.style.display = "block";
     if (todoListItemCheckbox.checked) {
       complectedCount++;
     }
     itemCount++;
   }
-  updateClearCompletedVisiblity();
 }
 
 function showAll() {
+  console.log('skirt');
   for (let i = 0; i < todoList.children.length; i++) {
     const todoListItem = todoList.children[i];
     todoListItem.style.display = "block";
   }
   updateCounters();
   updateClearCompletedVisiblity();
+  addShadowToFooter();
 }
 
 function showActive() {
+  console.log('skirt');
   for (let i = 0; i < todoList.children.length; i++) {
     const todoListItem = todoList.children[i];
     const todoListItemCheckbox = todoListItem.querySelector("input");
@@ -171,9 +197,11 @@ function showActive() {
   }
   updateCounters();
   updateClearCompletedVisiblity();
+  addShadowToFooter();
 }
 
 function showCompleted() {
+  console.log('skirt');
   for (let i = 0; i < todoList.children.length; i++) {
     const todoListItem = todoList.children[i];
     const todoListItemCheckbox = todoListItem.querySelector("input");
@@ -185,6 +213,7 @@ function showCompleted() {
   }
   updateCounters();
   updateClearCompletedVisiblity();
+  addShadowToFooter();
 }
 
 /*
